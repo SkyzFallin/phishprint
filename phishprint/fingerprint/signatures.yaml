@@ -1,0 +1,182 @@
+# Vendor signature database — data-driven so it can be updated without code.
+# Each vendor entry can match on:
+#   mx_suffixes:    case-insensitive suffix match against MX hostnames
+#   spf_includes:   exact (case-insensitive) match against include: targets
+#   asn_orgs:       case-insensitive substring match against ASN org name
+#   asns:           exact ASN integers
+# Every match contributes a confidence weight; total >= 3 = high, >=2 medium, else low.
+
+vendors:
+  - id: proofpoint
+    name: Proofpoint Essentials / Enterprise
+    category: secure_email_gateway
+    inspection: heavy
+    mx_suffixes:
+      - .pphosted.com
+      - .ppe-hosted.com
+      - .mxlogic.net
+    spf_includes:
+      - spf-0001.pphosted.com
+      - spf-0002.pphosted.com
+      - spf.protection.proofpoint.com
+    asn_orgs:
+      - proofpoint
+    notes: |
+      URL Defense rewrites links and click-time scans. Expect bot fetches
+      from Proofpoint scanner ranges shortly after delivery. Avoid reusing
+      domains across engagements as Proofpoint shares signal across tenants.
+
+  - id: mimecast
+    name: Mimecast
+    category: secure_email_gateway
+    inspection: heavy
+    mx_suffixes:
+      - .mimecast.com
+      - .mimecast.co.za
+      - .mimecast-offshore.com
+    spf_includes:
+      - _spf.mimecast.com
+      - _netblocks.mimecast.com
+    asn_orgs:
+      - mimecast
+    notes: |
+      Attachment Protect detonates URLs and attachments in a sandbox. Use
+      lure pages that don't auto-execute on first GET; consider conditional
+      content based on UA / referrer.
+
+  - id: m365_defender
+    name: Microsoft 365 (Defender for O365)
+    category: cloud_mailbox
+    inspection: medium_to_heavy
+    mx_suffixes:
+      - .mail.protection.outlook.com
+      - .protection.outlook.com
+    spf_includes:
+      - spf.protection.outlook.com
+    asn_orgs:
+      - microsoft
+    notes: |
+      Safe Links rewrites URLs (when licensed). Safe Attachments detonates.
+      Tenant ATP policies vary widely — presence of MX alone says little
+      about whether ATP is licensed/enabled.
+
+  - id: google_workspace
+    name: Google Workspace
+    category: cloud_mailbox
+    inspection: medium
+    mx_suffixes:
+      - aspmx.l.google.com
+      - .googlemail.com
+      - aspmx2.googlemail.com
+      - aspmx3.googlemail.com
+      - alt1.aspmx.l.google.com
+      - alt2.aspmx.l.google.com
+      - alt3.aspmx.l.google.com
+      - alt4.aspmx.l.google.com
+    spf_includes:
+      - _spf.google.com
+    asn_orgs:
+      - google
+    notes: |
+      Strong DMARC enforcement on the inbound side. Gmail aggressively
+      flags first-contact senders without warmed reputation; budget time
+      for warmup.
+
+  - id: cisco_ironport
+    name: Cisco Secure Email (IronPort / CES)
+    category: secure_email_gateway
+    inspection: heavy
+    mx_suffixes:
+      - .iphmx.com
+      - .ironport.com
+    spf_includes:
+      - spf.ces.cisco.com
+    asn_orgs:
+      - cisco
+    notes: |
+      Aggressive reputation-based filtering (SenderBase / Talos). New
+      sender domains commonly soft-quarantined for the first hours.
+
+  - id: barracuda
+    name: Barracuda Email Security Gateway
+    category: secure_email_gateway
+    inspection: medium
+    mx_suffixes:
+      - .barracudanetworks.com
+      - .ess.barracudanetworks.com
+    spf_includes:
+      - spf.ess.barracudanetworks.com
+    asn_orgs:
+      - barracuda
+    notes: |
+      Link Protection rewrites URLs in many configurations.
+
+  - id: sophos
+    name: Sophos Email
+    category: secure_email_gateway
+    inspection: medium
+    mx_suffixes:
+      - .sophos.com
+      - .reflexion.net
+    spf_includes:
+      - mail.sophos.com
+      - _spf.sophos.com
+    asn_orgs:
+      - sophos
+
+  - id: trend_micro
+    name: Trend Micro Email Security
+    category: secure_email_gateway
+    inspection: medium
+    mx_suffixes:
+      - .trendmicro.com
+      - .tmes.trendmicro.com
+
+  - id: fortinet
+    name: FortiMail
+    category: secure_email_gateway
+    inspection: medium
+    mx_suffixes:
+      - .fortimail.com
+      - fortimail.
+
+  - id: mailroute
+    name: MailRoute
+    category: secure_email_gateway
+    inspection: medium
+    mx_suffixes:
+      - .mailroute.net
+
+  - id: zoho
+    name: Zoho Mail
+    category: cloud_mailbox
+    inspection: low
+    mx_suffixes:
+      - .zoho.com
+      - .zohomail.com
+    spf_includes:
+      - zoho.com
+      - zohomail.com
+
+  - id: mailgun
+    name: Mailgun (transactional sender)
+    category: transactional_sender
+    inspection: low
+    spf_includes:
+      - mailgun.org
+      - spf.mailgun.org
+
+  - id: sendgrid
+    name: SendGrid (transactional sender)
+    category: transactional_sender
+    inspection: low
+    spf_includes:
+      - sendgrid.net
+      - _spf.sendgrid.net
+
+  - id: amazonses
+    name: Amazon SES
+    category: transactional_sender
+    inspection: low
+    spf_includes:
+      - amazonses.com
