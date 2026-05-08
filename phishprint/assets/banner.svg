@@ -8,6 +8,8 @@
     </linearGradient>
   </defs>
   <rect width="760" height="180" fill="url(#bg)"/>
+
+  <!-- text block -->
   <text x="40" y="84"
         font-family="Courier New, Courier, monospace"
         font-size="56"
@@ -21,5 +23,25 @@
         font-family="Courier New, Courier, monospace"
         font-size="14"
         fill="#58a6ff">SPF // DKIM // DMARC // vendor fingerprint // readiness score</text>
+
+  <!-- right-side graphic: envelope pierced by a fishhook -->
+  <g stroke="#58a6ff" stroke-width="2" fill="none"
+     stroke-linecap="round" stroke-linejoin="round">
+    <!-- envelope body -->
+    <rect x="585" y="65" width="140" height="85" rx="3"/>
+    <!-- envelope flap -->
+    <polyline points="585,65 655,118 725,65"/>
+    <!-- fishhook shaft entering through the flap -->
+    <path d="M 655 22 L 655 118"/>
+    <!-- hook curve below envelope -->
+    <path d="M 655 118 Q 655 152 628 152 Q 605 152 605 130"/>
+    <!-- barb -->
+    <path d="M 605 130 L 615 138" />
+    <path d="M 605 130 L 612 121" />
+    <!-- hook eye (small loop at top of shaft) -->
+    <circle cx="655" cy="18" r="4"/>
+  </g>
+
+  <!-- bottom accent line -->
   <line x1="0" y1="170" x2="760" y2="170" stroke="#58a6ff" stroke-width="1"/>
 </svg>
