@@ -52,9 +52,12 @@ def main(
     json_file: Path | None = typer.Option(
         None, "--json-file", help="Also write JSON to a file"
     ),
-    out_dir: Path | None = typer.Option(
-        None, "--out-dir", "-d",
+    out_dir: Path = typer.Option(
+        Path("./output"), "--out-dir", "-d",
         help="Dump <domain>.txt, <domain>.json, <domain>.md into this directory",
+    ),
+    no_save: bool = typer.Option(
+        False, "--no-save", help="Do not write any files (overrides --out-dir)"
     ),
     score_only: bool = typer.Option(
         False, "--score", help="Print only the readiness score (0-100)"
@@ -99,14 +102,15 @@ def main(
 
     report = scan(domain, resolver, selectors=sels, do_asn=not no_asn)
 
-    # Side-channel writes (don't influence stdout decision).
-    if output:
-        output.write_text(to_markdown(report), encoding="utf-8")
-        err.print(f"[green]wrote[/green] {output}")
-    if json_file:
-        json_file.write_text(to_json(report), encoding="utf-8")
-        err.print(f"[green]wrote[/green] {json_file}")
-    if out_dir:
+    # Side-channel writes (don't influence stdout decision). Skip all file
+    # writes when --score (pipeline use) or --no-save (explicit opt-out).
+    if not score_only and not no_save:
+        if output:
+            output.write_text(to_markdown(report), encoding="utf-8")
+            err.print(f"[green]wrote[/green] {output}")
+        if json_file:
+            json_file.write_text(to_json(report), encoding="utf-8")
+            err.print(f"[green]wrote[/green] {json_file}")
         for path in _dump_to_dir(out_dir, report):
             err.print(f"[green]wrote[/green] {path}")
 

@@ -20,7 +20,7 @@ def test_cli_json_flag(monkeypatch, hardened_m365):
     r, domain = hardened_m365
     monkeypatch.setattr(cli_module, "scan", _fake_scan_factory(r))
     runner = CliRunner()
-    result = runner.invoke(cli_module._typer_app, [domain, "--json"])
+    result = runner.invoke(cli_module._typer_app, [domain, "--json", "--no-save"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.stdout)
     assert data["domain"] == domain
@@ -32,7 +32,7 @@ def test_cli_default_pipe_yields_json(monkeypatch, hardened_m365):
     r, domain = hardened_m365
     monkeypatch.setattr(cli_module, "scan", _fake_scan_factory(r))
     runner = CliRunner()
-    result = runner.invoke(cli_module._typer_app, [domain])
+    result = runner.invoke(cli_module._typer_app, [domain, "--no-save"])
     assert result.exit_code == 0, result.output
     data = json.loads(result.stdout)
     assert data["domain"] == domain
@@ -52,12 +52,49 @@ def test_cli_writes_markdown_file(monkeypatch, hardened_m365, tmp_path):
     monkeypatch.setattr(cli_module, "scan", _fake_scan_factory(r))
     out = tmp_path / "report.md"
     runner = CliRunner()
-    result = runner.invoke(cli_module._typer_app, [domain, "-o", str(out), "--json"])
+    result = runner.invoke(
+        cli_module._typer_app,
+        [domain, "-o", str(out), "--json", "-d", str(tmp_path / "out")],
+    )
     assert result.exit_code == 0, result.output
     assert out.exists()
     md = out.read_text(encoding="utf-8")
     assert "phishprint report" in md
     assert "Readiness" in md
+
+
+def test_cli_default_out_dir_dumps_to_output(monkeypatch, hardened_m365, tmp_path):
+    """Without flags, the tool should dump files to ./output/ in the cwd."""
+    r, domain = hardened_m365
+    monkeypatch.setattr(cli_module, "scan", _fake_scan_factory(r))
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli_module._typer_app, [domain])
+    assert result.exit_code == 0, result.output
+    default_dir = tmp_path / "output"
+    assert (default_dir / f"{domain}.txt").exists()
+    assert (default_dir / f"{domain}.json").exists()
+    assert (default_dir / f"{domain}.md").exists()
+
+
+def test_cli_no_save_skips_file_writes(monkeypatch, hardened_m365, tmp_path):
+    r, domain = hardened_m365
+    monkeypatch.setattr(cli_module, "scan", _fake_scan_factory(r))
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli_module._typer_app, [domain, "--no-save"])
+    assert result.exit_code == 0, result.output
+    assert not (tmp_path / "output").exists()
+
+
+def test_cli_score_only_skips_file_writes(monkeypatch, hardened_m365, tmp_path):
+    r, domain = hardened_m365
+    monkeypatch.setattr(cli_module, "scan", _fake_scan_factory(r))
+    monkeypatch.chdir(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(cli_module._typer_app, [domain, "--score"])
+    assert result.exit_code == 0
+    assert not (tmp_path / "output").exists()
 
 
 def test_cli_out_dir_dumps_three_files(monkeypatch, hardened_m365, tmp_path):
@@ -99,6 +136,9 @@ def test_cli_writes_json_file(monkeypatch, hardened_m365, tmp_path):
     monkeypatch.setattr(cli_module, "scan", _fake_scan_factory(r))
     out = tmp_path / "scan.json"
     runner = CliRunner()
-    result = runner.invoke(cli_module._typer_app, [domain, "--json-file", str(out), "--json"])
+    result = runner.invoke(
+        cli_module._typer_app,
+        [domain, "--json-file", str(out), "--json", "-d", str(tmp_path / "out")],
+    )
     assert result.exit_code == 0, result.output
     assert json.loads(out.read_text(encoding="utf-8"))["domain"] == domain

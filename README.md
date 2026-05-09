@@ -60,7 +60,8 @@ Then:
 phishprint example.com                      # JSON to stdout
 phishprint example.com --score              # 0-100 integer, for piping
 phishprint example.com -o report.md         # operator-readable Markdown
-phishprint example.com -d ./scans           # dump .txt + .json + .md
+phishprint example.com -d ./scans           # custom dump dir (default: ./output)
+phishprint example.com --no-save            # skip the default file dump
 phishprint example.com --json-file scan.json -o report.md
 phishprint example.com --doh                # DNS-over-HTTPS via 1.1.1.1
 phishprint example.com --resolver 9.9.9.9   # specific resolver
@@ -93,7 +94,9 @@ Flags:
   -o, --output <path>        Write Markdown report to path
       --json                 Force JSON to stdout (default if stdout is piped)
       --json-file <path>     Also write JSON to a file
-  -d, --out-dir <dir>        Dump <domain>.txt / .json / .md into directory
+  -d, --out-dir <dir>        Where to dump <domain>.txt / .json / .md
+                             (default: ./output)
+      --no-save              Don't write any files
       --score                Output only the readiness score (0-100)
       --selectors <file>     Custom DKIM selector wordlist
       --resolver <ip>        Use specific DNS resolver
@@ -104,6 +107,15 @@ Flags:
       --no-color             Disable ANSI color
       --version              Show version
 ```
+
+**By default, every scan dumps three files into `./output/`:**
+
+- `<domain>.txt` — pretty summary, ANSI stripped, greppable
+- `<domain>.json` — full structured findings
+- `<domain>.md` — operator-readable Markdown report
+
+Files overwrite on rerun. Use `-d <dir>` to change the directory or
+`--no-save` to skip files entirely. `--score` also skips file writes.
 
 ## Notes
 
