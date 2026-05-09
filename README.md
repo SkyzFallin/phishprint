@@ -40,8 +40,23 @@ Cuts pre-engagement DNS-and-headers recon from ~30 minutes of manual
 
 ## Quick Start
 
+Install from a clone (not yet on PyPI):
+
 ```bash
-pipx install phishprint
+git clone https://github.com/SkyzFallin/phishprint
+cd phishprint
+pipx install .
+```
+
+Or install directly from GitHub without cloning:
+
+```bash
+pipx install git+https://github.com/SkyzFallin/phishprint
+```
+
+Then:
+
+```bash
 phishprint example.com                      # JSON to stdout
 phishprint example.com --score              # 0-100 integer, for piping
 phishprint example.com -o report.md         # operator-readable Markdown
