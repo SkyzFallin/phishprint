@@ -52,6 +52,10 @@ def main(
     json_file: Path | None = typer.Option(
         None, "--json-file", help="Also write JSON to a file"
     ),
+    out_dir: Path | None = typer.Option(
+        None, "--out-dir", "-d",
+        help="Dump <domain>.txt, <domain>.json, <domain>.md into this directory",
+    ),
     score_only: bool = typer.Option(
         False, "--score", help="Print only the readiness score (0-100)"
     ),
@@ -102,6 +106,9 @@ def main(
     if json_file:
         json_file.write_text(to_json(report), encoding="utf-8")
         err.print(f"[green]wrote[/green] {json_file}")
+    if out_dir:
+        for path in _dump_to_dir(out_dir, report):
+            err.print(f"[green]wrote[/green] {path}")
 
     # Stdout decision tree.
     if score_only:
@@ -348,6 +355,26 @@ def _recs_section(report: Report) -> Group:
             parts.append(Text("      " + ln))
         parts.append(Text(""))
     return Group(*parts)
+
+
+def _dump_to_dir(out_dir: Path, report: Report) -> list[Path]:
+    """Write <domain>.txt / .json / .md into out_dir. Returns the paths written."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    safe = report.domain.replace("/", "_").replace("\\", "_")
+    txt_path = out_dir / f"{safe}.txt"
+    json_path = out_dir / f"{safe}.json"
+    md_path = out_dir / f"{safe}.md"
+
+    # Render the pretty summary into a plain-text file. force_terminal=False
+    # + no_color=True strips ANSI; width=120 keeps tables sane.
+    with txt_path.open("w", encoding="utf-8") as f:
+        plain = Console(file=f, force_terminal=False, no_color=True,
+                        highlight=False, width=120)
+        _render_summary(plain, report)
+
+    json_path.write_text(to_json(report), encoding="utf-8")
+    md_path.write_text(to_markdown(report), encoding="utf-8")
+    return [txt_path, json_path, md_path]
 
 
 def _wrap(text: str, width: int) -> list[str]:

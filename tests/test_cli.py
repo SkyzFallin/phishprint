@@ -60,6 +60,40 @@ def test_cli_writes_markdown_file(monkeypatch, hardened_m365, tmp_path):
     assert "Readiness" in md
 
 
+def test_cli_out_dir_dumps_three_files(monkeypatch, hardened_m365, tmp_path):
+    r, domain = hardened_m365
+    monkeypatch.setattr(cli_module, "scan", _fake_scan_factory(r))
+    runner = CliRunner()
+    result = runner.invoke(
+        cli_module._typer_app, [domain, "--out-dir", str(tmp_path), "--json"]
+    )
+    assert result.exit_code == 0, result.output
+    txt = tmp_path / f"{domain}.txt"
+    js = tmp_path / f"{domain}.json"
+    md = tmp_path / f"{domain}.md"
+    assert txt.exists() and js.exists() and md.exists()
+    # txt is the rendered summary as plain text — must contain the headline.
+    txt_body = txt.read_text(encoding="utf-8")
+    assert domain in txt_body
+    assert "phishprint" in txt_body
+    assert "Hardened" in txt_body
+    # json / md should be the same content as the dedicated writers produce.
+    assert json.loads(js.read_text(encoding="utf-8"))["domain"] == domain
+    assert "Readiness" in md.read_text(encoding="utf-8")
+
+
+def test_cli_out_dir_creates_missing_directory(monkeypatch, hardened_m365, tmp_path):
+    r, domain = hardened_m365
+    monkeypatch.setattr(cli_module, "scan", _fake_scan_factory(r))
+    target = tmp_path / "scans" / "2026-05-09"
+    runner = CliRunner()
+    result = runner.invoke(
+        cli_module._typer_app, [domain, "-d", str(target), "--json"]
+    )
+    assert result.exit_code == 0, result.output
+    assert (target / f"{domain}.txt").exists()
+
+
 def test_cli_writes_json_file(monkeypatch, hardened_m365, tmp_path):
     r, domain = hardened_m365
     monkeypatch.setattr(cli_module, "scan", _fake_scan_factory(r))

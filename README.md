@@ -60,7 +60,8 @@ Then:
 phishprint example.com                      # JSON to stdout
 phishprint example.com --score              # 0-100 integer, for piping
 phishprint example.com -o report.md         # operator-readable Markdown
-phishprint example.com --json scan.json -o report.md
+phishprint example.com -d ./scans           # dump .txt + .json + .md
+phishprint example.com --json-file scan.json -o report.md
 phishprint example.com --doh                # DNS-over-HTTPS via 1.1.1.1
 phishprint example.com --resolver 9.9.9.9   # specific resolver
 ```
@@ -90,7 +91,9 @@ phishprint <domain> [flags]
 
 Flags:
   -o, --output <path>        Write Markdown report to path
-      --json <path>          Write JSON to path (in addition to stdout)
+      --json                 Force JSON to stdout (default if stdout is piped)
+      --json-file <path>     Also write JSON to a file
+  -d, --out-dir <dir>        Dump <domain>.txt / .json / .md into directory
       --score                Output only the readiness score (0-100)
       --selectors <file>     Custom DKIM selector wordlist
       --resolver <ip>        Use specific DNS resolver
