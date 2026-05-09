@@ -93,10 +93,32 @@ def fingerprint(mx: MXResult, spf: SPFResult) -> list[VendorMatch]:
                 m.score += 1
 
         if m.evidence:
+            # When multiple suffixes match the same host (e.g. both
+            # `.mail.protection.outlook.com` and `.protection.outlook.com`),
+            # keep only the most specific evidence per (kind, matched) so
+            # we don't double-count score or spam the report.
+            m.evidence, m.score = _dedupe_evidence(m.evidence)
             m.confidence = _confidence(m.score)
             matches[sid] = m
 
     return sorted(matches.values(), key=lambda v: (-v.score, v.name))
+
+
+def _dedupe_evidence(evidence: list[VendorEvidence]) -> tuple[list[VendorEvidence], int]:
+    """Collapse evidence to one entry per (kind, matched). Returns (list, score)."""
+    seen: dict[tuple[str, str], VendorEvidence] = {}
+    for e in evidence:
+        key = (e.kind, e.matched)
+        # Prefer the most specific signature value (longest) when multiple
+        # signatures match the same host.
+        prev = seen.get(key)
+        if prev is None or len(e.value) > len(prev.value):
+            seen[key] = e
+    deduped = list(seen.values())
+    score = 0
+    for e in deduped:
+        score += {"mx_suffix": 2, "spf_include": 2, "asn_org": 1, "asn": 1}.get(e.kind, 1)
+    return deduped, score
 
 
 def categories(matches: Iterable[VendorMatch]) -> set[str]:
